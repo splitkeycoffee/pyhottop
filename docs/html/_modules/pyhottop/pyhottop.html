@@ -1,0 +1,735 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyhottop.pyhottop &mdash; pyHottop 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="pyHottop 0.1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../index.html" class="icon icon-home"> pyHottop
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../code.html#hottop-interface">Hottop Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../code.html#control-process">Control Process</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">pyHottop</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyhottop.pyhottop</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyhottop.pyhottop</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Interface with the hottop roaster through the serial port.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">serial</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">Queue</span> <span class="kn">import</span> <span class="n">Queue</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span><span class="p">,</span> <span class="n">Event</span>
+
+
+<div class="viewcode-block" id="InvalidInput"><a class="viewcode-back" href="../../exceptions.html#pyhottop.pyhottop.InvalidInput">[docs]</a><span class="k">class</span> <span class="nc">InvalidInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception to capture invalid input commands.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="SerialConnectionError"><a class="viewcode-back" href="../../exceptions.html#pyhottop.pyhottop.SerialConnectionError">[docs]</a><span class="k">class</span> <span class="nc">SerialConnectionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception to capture serial connection issues.&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+</div>
+<span class="k">def</span> <span class="nf">bool2int</span><span class="p">(</span><span class="nb">bool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert a bool to an int.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">hex2int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert hex to an int.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">celsius2fahrenheit</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert temperatures.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="mf">1.8</span><span class="p">)</span> <span class="o">+</span> <span class="mi">32</span>
+
+
+<div class="viewcode-block" id="ControlProcess"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess">[docs]</a><span class="k">class</span> <span class="nc">ControlProcess</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Primary processor to communicate with the hottop directly.</span>
+
+<span class="sd">    :param conn: Established serial connection to the Hottop</span>
+<span class="sd">    :type conn: Serial instance</span>
+<span class="sd">    :param config: Initial configurations settings</span>
+<span class="sd">    :type config: dict</span>
+<span class="sd">    :param q: Shared queue to interact with the user interface</span>
+<span class="sd">    :type q: Queue instance</span>
+<span class="sd">    :param logger: Shared logger to keep continuity</span>
+<span class="sd">    :type logger: Logging instance</span>
+<span class="sd">    :param callback: Optional callback function to stream results</span>
+<span class="sd">    :type callback: function</span>
+<span class="sd">    :returns: ControlProces instance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extend threads to support more control logic.&quot;&quot;&quot;</span>
+        <span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">conn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cb</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c"># Trigger events used in the core loop.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cooldown</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ControlProcess._generate_config"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._generate_config">[docs]</a>    <span class="k">def</span> <span class="nf">_generate_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a configuration that can be sent to the Hottop roaster.</span>
+
+<span class="sd">        Configuration settings need to be represented inside of a byte array</span>
+<span class="sd">        that is then written to the serial interface. Much of the configuration</span>
+<span class="sd">        is static, but control settings are also included and pulled from the</span>
+<span class="sd">        shared dictionary.</span>
+
+<span class="sd">        :returns: Byte array of the prepared configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">([</span><span class="mh">0x00</span><span class="p">]</span><span class="o">*</span><span class="mi">36</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xA5</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x96</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xB0</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xA0</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x01</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x01</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x24</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;heater&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;fan&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;main_fan&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;solenoid&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;drum_motor&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="mi">35</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[:</span><span class="mi">35</span><span class="p">]])</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+        <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ControlProcess._send_config"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._send_config">[docs]</a>    <span class="k">def</span> <span class="nf">_send_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Send configuration data to the hottop.</span>
+
+<span class="sd">        :returns: bool</span>
+<span class="sd">        :raises: Generic exceptions if an error is identified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">serialized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_config</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Configuration has been serialized&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushInput</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushOutput</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">serialized</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ControlProcess._validate_checksum"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._validate_checksum">[docs]</a>    <span class="k">def</span> <span class="nf">_validate_checksum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Validate the buffer response against the checksum.</span>
+
+<span class="sd">        When reading the serial interface, data will come back in a raw format</span>
+<span class="sd">        with an included checksum process.</span>
+
+<span class="sd">        :returns: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Validating the buffer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Buffer was empty&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">hex2int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">buffer</span><span class="p">[:</span><span class="mi">35</span><span class="p">]])</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
+        <span class="n">p35</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">35</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">p0</span> <span class="o">!=</span> <span class="mi">165</span> <span class="ow">or</span> <span class="n">p1</span> <span class="o">!=</span> <span class="mi">150</span> <span class="ow">or</span> <span class="n">p35</span> <span class="o">!=</span> <span class="n">checksum</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Buffer checksum was not valid&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="ControlProcess._read_settings"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._read_settings">[docs]</a>    <span class="k">def</span> <span class="nf">_read_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read the information from the Hottop.</span>
+
+<span class="sd">        Read the settings from the serial interface and convert them into a</span>
+<span class="sd">        human-readable format that can be shared back to the end-user. Reading</span>
+<span class="sd">        from the serial interface will occasionally produce strange results or</span>
+<span class="sd">        blank reads, so a retry process has been built into the function as a</span>
+<span class="sd">        recursive check.</span>
+
+<span class="sd">        :returns: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushInput</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushOutput</span><span class="p">()</span>
+        <span class="nb">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
+        <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
+        <span class="n">et</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">23</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">24</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;external_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">et</span><span class="p">)</span>
+        <span class="n">bt</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">25</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">26</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">bt</span><span class="p">)</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">16</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">17</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">18</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">19</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">settings</span>
+</div>
+<div class="viewcode-block" id="ControlProcess._wake_up"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._wake_up">[docs]</a>    <span class="k">def</span> <span class="nf">_wake_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wake the machine up to avoid race conditions.</span>
+
+<span class="sd">        When first interacting with the Hottop, the machine may not wake up</span>
+<span class="sd">        right away which can put our reader into a death loop. This wake up</span>
+<span class="sd">        routine ensures we prime the roaster with some data before starting</span>
+<span class="sd">        our main loops to read/write data.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="nb">range</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_send_config</span><span class="p">()</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="ControlProcess.run"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the core loop of reading and writing configurations.</span>
+
+<span class="sd">        This is where all the roaster magic occurs. On the initial run, we</span>
+<span class="sd">        prime the roaster with some data to wake it up. Once awoke, we check</span>
+<span class="sd">        our shared queue to identify if the user has passed any updated</span>
+<span class="sd">        configuration. Once checked, start to read and write to the Hottop</span>
+<span class="sd">        roaster as long as the exit signal has not been set. All steps are</span>
+<span class="sd">        repeated after waiting for a specific time interval.</span>
+
+<span class="sd">        There are also specialized routines built into this function that are</span>
+<span class="sd">        controlled via events. These events are unique to the roasting process</span>
+<span class="sd">        and pre-configure the system with a configuration, so the user doesn&#39;t</span>
+<span class="sd">        need to do it themselves.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wake_up</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exit</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cb</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooldown</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Cool down process triggered&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_send_config</span><span class="p">()</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="ControlProcess.drop"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Register a drop event to begin the cool-down process.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Dropping the coffee&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cooldown</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ControlProcess.shutdown"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess.shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Register a shutdown event to stop interacting with the Hottop.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Shutdown initiated&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+</div></div>
+<div class="viewcode-block" id="Hottop"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop">[docs]</a><span class="k">class</span> <span class="nc">Hottop</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;Object to interact and control the hottop roaster.</span>
+
+<span class="sd">    :returns: Hottop instance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s">&quot;HOTTOP&quot;</span>
+    <span class="n">USB_PORT</span> <span class="o">=</span> <span class="s">&quot;/dev/cu.usbserial-DA01PEYC&quot;</span>
+    <span class="n">BAUDRATE</span> <span class="o">=</span> <span class="mi">115200</span>
+    <span class="n">BYTE_SIZE</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">PARITY</span> <span class="o">=</span> <span class="s">&quot;N&quot;</span>
+    <span class="n">STOPBITS</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">TIMEOUT</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">LOG_LEVEL</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+    <span class="n">INTERVAL</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start of the hottop.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_controls</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Hottop._logger"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._logger">[docs]</a>    <span class="k">def</span> <span class="nf">_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a logger to be used between processes.</span>
+
+<span class="sd">        :returns: Logging instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LOG_LEVEL</span><span class="p">)</span>
+        <span class="n">shandler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[1;32m</span><span class="si">%(levelname)-5s</span><span class="s"> </span><span class="si">%(module)s</span><span class="s">:</span><span class="si">%(funcName)s</span><span class="s">():&#39;</span>
+        <span class="n">fmt</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="si">%(lineno)d</span><span class="s"> </span><span class="si">%(asctime)s</span><span class="se">\033</span><span class="s">[0m| </span><span class="si">%(message)s</span><span class="s">&#39;</span>
+        <span class="n">shandler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="n">fmt</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">shandler</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">logger</span>
+</div>
+<div class="viewcode-block" id="Hottop._autodiscover_usb"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._autodiscover_usb">[docs]</a>    <span class="k">def</span> <span class="nf">_autodiscover_usb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Attempt to find the serial adapter for the hottop.</span>
+
+<span class="sd">        This will loop over the USB serial interfaces looking for a connection</span>
+<span class="sd">        that appears to match the naming convention of the Hottop roaster.</span>
+
+<span class="sd">        :returns: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;win&#39;</span><span class="p">):</span>
+            <span class="n">ports</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;COM</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;linux&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;cygwin&#39;</span><span class="p">):</span>
+            <span class="n">ports</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s">&#39;/dev/tty[A-Za-z]*&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;darwin&#39;</span><span class="p">):</span>
+            <span class="n">ports</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s">&#39;/dev/cu.*&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">EnvironmentError</span><span class="p">(</span><span class="s">&#39;Unsupported platform&#39;</span><span class="p">)</span>
+
+        <span class="n">match</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">ports</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">port</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&quot;/dev/cu.usbserial-&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span>
+                        <span class="n">port</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;bluetooth&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">USB_PORT</span> <span class="o">=</span> <span class="n">port</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="n">port</span>
+                    <span class="k">break</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">serial</span><span class="o">.</span><span class="n">SerialException</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">match</span>
+</div>
+<div class="viewcode-block" id="Hottop.connect"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Connect to the USB for the hottop.</span>
+
+<span class="sd">        Attempt to discover the USB port used for the Hottop and then form a</span>
+<span class="sd">        connection using the serial library.</span>
+
+<span class="sd">        :returns: bool</span>
+<span class="sd">        :raises SerialConnectionError:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autodiscover_usb</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Auto-discovered USB port: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">match</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">USB_PORT</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BAUDRATE</span><span class="p">,</span>
+                                       <span class="n">bytesize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BYTE_SIZE</span><span class="p">,</span>
+                                       <span class="n">parity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">PARITY</span><span class="p">,</span>
+                                       <span class="n">stopbits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">STOPBITS</span><span class="p">,</span>
+                                       <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">serial</span><span class="o">.</span><span class="n">serialutil</span><span class="o">.</span><span class="n">SerialException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SerialConnectionError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Serial connection set&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Serial connection opened&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="Hottop._init_controls"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._init_controls">[docs]</a>    <span class="k">def</span> <span class="nf">_init_controls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Establish a set of base controls the user can influence.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTERVAL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;external_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Hottop._callback"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._callback">[docs]</a>    <span class="k">def</span> <span class="nf">_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Processor callback to clean-up stream data.</span>
+
+<span class="sd">        This function provides a hook into the output stream of data from the</span>
+<span class="sd">        controller processing thread. Hottop readings are saved into a local</span>
+<span class="sd">        class variable for later saving. If the user has defined a callback, it</span>
+<span class="sd">        will be called within this private function.</span>
+
+<span class="sd">        :param data: Information from the controller process</span>
+<span class="sd">        :type data: dict</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Passing data back to client handler&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop.start"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start the roaster control process.</span>
+
+<span class="sd">        This function will kick off the processing thread for the Hottop and</span>
+<span class="sd">        register any user-defined callback function.</span>
+
+<span class="sd">        :param func: Callback function for Hottop stream data</span>
+<span class="sd">        :type func: function</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">ControlProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.end"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;End the roaster control process via thread signal.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.drop"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Preset call to drop coffee from the roaster via thread signal.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_serial_state"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_serial_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_serial_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the state of the USB connection.</span>
+
+<span class="sd">        :returns: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_current_config"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_current_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the current running config and state.</span>
+
+<span class="sd">        :returns: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&#39;state&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state</span><span class="p">(),</span>
+            <span class="s">&#39;settings&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+        <span class="p">}</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_interval"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_interval">[docs]</a>    <span class="k">def</span> <span class="nf">set_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the polling interval for the process thread.</span>
+
+<span class="sd">        :param interval: How often to poll the Hottop</span>
+<span class="sd">        :type interval: int or float</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">float</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Interval value must be of float or int&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_heater"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_heater">[docs]</a>    <span class="k">def</span> <span class="nf">get_heater</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the heater config.</span>
+
+<span class="sd">        :returns: int [0-100]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_heater"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_heater">[docs]</a>    <span class="k">def</span> <span class="nf">set_heater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heater</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the heater config.</span>
+
+<span class="sd">        :param heater: Value to set the heater</span>
+<span class="sd">        :type heater: int [0-100]</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">heater</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span> <span class="ow">and</span> <span class="n">heater</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">101</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Heater value must be int between 0-100&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">heater</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_fan"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_fan">[docs]</a>    <span class="k">def</span> <span class="nf">get_fan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the fan config.</span>
+
+<span class="sd">        :returns: int [0-10]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_fan"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_fan">[docs]</a>    <span class="k">def</span> <span class="nf">set_fan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the fan config.</span>
+
+<span class="sd">        :param fan: Value to set the fan</span>
+<span class="sd">        :type fan: int [0-10]</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">fan</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span> <span class="ow">and</span> <span class="n">fan</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Fan value must be int between 0-10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_main_fan"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_main_fan">[docs]</a>    <span class="k">def</span> <span class="nf">get_main_fan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the main fan config.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_main_fan"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_main_fan">[docs]</a>    <span class="k">def</span> <span class="nf">set_main_fan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">main_fan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the main fan config.</span>
+
+<span class="sd">        :param main_fan: Value to set the main fan</span>
+<span class="sd">        :type main_fan: int [0-10]</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">main_fan</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span> <span class="ow">and</span> <span class="n">main_fan</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Main fan value must be int between 0-10&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">main_fan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_drum_motor"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_drum_motor">[docs]</a>    <span class="k">def</span> <span class="nf">get_drum_motor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the drum motor config.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_drum_motor"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_drum_motor">[docs]</a>    <span class="k">def</span> <span class="nf">set_drum_motor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">drum_motor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the drum motor config.</span>
+
+<span class="sd">        :param drum_motor: Value to set the drum motor</span>
+<span class="sd">        :type drum_motor: bool</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">drum_motor</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Drum motor value must be bool&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bool2int</span><span class="p">(</span><span class="n">drum_motor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_solenoid"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_solenoid">[docs]</a>    <span class="k">def</span> <span class="nf">get_solenoid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the solenoid config.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_solenoid"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_solenoid">[docs]</a>    <span class="k">def</span> <span class="nf">set_solenoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solenoid</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the solenoid config.</span>
+
+<span class="sd">        :param solenoid: Value to set the solenoid</span>
+<span class="sd">        :type solenoid: bool</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">solenoid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Solenoid value must be bool&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bool2int</span><span class="p">(</span><span class="n">solenoid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_cooling_motor"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_cooling_motor">[docs]</a>    <span class="k">def</span> <span class="nf">get_cooling_motor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the cooling motor config.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_cooling_motor"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_cooling_motor">[docs]</a>    <span class="k">def</span> <span class="nf">set_cooling_motor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cooling_motor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the cooling motor config.</span>
+
+<span class="sd">        :param cooling_motor: Value to set the cooling motor</span>
+<span class="sd">        :type cooling_motor: bool</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">cooling_motor</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Cooling motor value must be bool&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bool2int</span><span class="p">(</span><span class="n">cooling_motor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Brandon Dixon.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
