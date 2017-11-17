@@ -3,6 +3,7 @@ Interface with the hottop roaster through the serial port.
 """
 
 import binascii
+import datetime
 import glob
 import logging
 import serial
@@ -35,6 +36,11 @@ def bool2int(bool):
         return 1
     else:
         return 0
+
+
+def now_time():
+    """Get the current time."""
+    return datetime.datetime.now()
 
 
 def hex2int(value):
@@ -273,6 +279,9 @@ class Hottop:
         self._log = self._logger()
         self._conn = None
         self._roast = list()
+        self._roasting = False
+        self._roast_start = None
+        self._roast_end = None
         self._config = dict()
         self._q = Queue()
         self._init_controls()
@@ -376,6 +385,10 @@ class Hottop:
         :type data: dict
         :returns: None
         """
+        if not self._roast_start:
+            return
+        td = (now_time() - self._roast_start)
+        data['time'] = (td.total_seconds() + 60) / 60  # Seconds since starting
         self._log.debug(data)
         self._roast.append(data)
         if self._user_callback:
@@ -395,7 +408,9 @@ class Hottop:
         self._user_callback = func
         self._process = ControlProcess(self._conn, self._config, self._q,
                                        self._log, callback=self._callback)
+        self._roast_start = now_time()
         self._process.start()
+        self._roasting = True
 
     def end(self):
         """End the roaster control process via thread signal.
@@ -403,6 +418,8 @@ class Hottop:
         :returns: None
         """
         self._process.shutdown()
+        self._roasting = False
+        self._roast_end = now_time()
 
     def drop(self):
         """Preset call to drop coffee from the roaster via thread signal.
@@ -426,7 +443,7 @@ class Hottop:
         :returns: dict
         """
         return {
-            'state': self.get_state(),
+            'state': self.get_serial_state(),
             'settings': dict(self._config)
         }
 
