@@ -199,6 +199,25 @@ will be called within this private function.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyhottop.pyhottop.Hottop.add_roast_event">
+<code class="descname">add_roast_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.add_roast_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.add_roast_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an event to the roast log.</p>
+<p>This is used to ingest events like first crack or dropping of the
+coffee. Beyond the event itself, we also add the time and current
+state of the roast for context.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> (<em>dict</em>) &#8211; Details describing what happened</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyhottop.pyhottop.Hottop.connect">
 <code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to the USB for the hottop.</p>
@@ -330,6 +349,50 @@ connection using the serial library.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyhottop.pyhottop.Hottop.get_roast">
+<code class="descname">get_roast</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.get_roast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.get_roast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the roast information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyhottop.pyhottop.Hottop.get_roast_properties">
+<code class="descname">get_roast_properties</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.get_roast_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.get_roast_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the roast properties.</p>
+<p>This will return the complete diagnostics object of the roast object
+which includes the timing, events and configuration details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyhottop.pyhottop.Hottop.get_roast_time">
+<code class="descname">get_roast_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.get_roast_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.get_roast_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the roast time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyhottop.pyhottop.Hottop.get_serial_state">
 <code class="descname">get_serial_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.get_serial_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.get_serial_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the state of the USB connection.</p>
@@ -347,6 +410,20 @@ connection using the serial library.</p>
 <dt id="pyhottop.pyhottop.Hottop.get_solenoid">
 <code class="descname">get_solenoid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.get_solenoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.get_solenoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the solenoid config.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyhottop.pyhottop.Hottop.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the internal roast properties.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -456,6 +533,24 @@ connection using the serial library.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>main_fan</strong> (<em>int [0-10]</em>) &#8211; Value to set the main fan</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">InvalidInput</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyhottop.pyhottop.Hottop.set_roast_properties">
+<code class="descname">set_roast_properties</code><span class="sig-paren">(</span><em>settings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyhottop/pyhottop.html#Hottop.set_roast_properties"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhottop.pyhottop.Hottop.set_roast_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the properties of the roast.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>settings</strong> (<em>dict</em>) &#8211; General settings for the roast setup</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
 </tr>

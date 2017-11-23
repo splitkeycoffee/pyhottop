@@ -38,11 +38,6 @@ def bool2int(bool):
         return 0
 
 
-def now_time():
-    """Get the current time."""
-    return datetime.datetime.now()
-
-
 def hex2int(value):
     """Convert hex to an int."""
     return int(binascii.hexlify(value), 16)
@@ -51,6 +46,41 @@ def hex2int(value):
 def celsius2fahrenheit(c):
     """Convert temperatures."""
     return (c * 1.8) + 32
+
+
+def now_time(str=False):
+    """Get the current time."""
+    if str:
+        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.datetime.now()
+
+
+def now_date(str=False):
+    """Get the current date."""
+    if str:
+        return datetime.datetime.now().strftime("%Y-%m-%d")
+    return datetime.date.today()
+
+
+def load_time(str_time):
+    """Convert the date string to a real datetime."""
+    return datetime.datetime.strptime(str_time, "%Y-%m-%d %H:%M:%S")
+
+
+def timedelta2millisecond(td):
+    """Get milliseconds from a timedelta."""
+    milliseconds = td.days * 24 * 60 * 60 * 1000
+    milliseconds += td.seconds * 1000
+    milliseconds += td.microseconds / 1000
+    return milliseconds
+
+
+def timedelta2period(duration):
+    """Convert timedelta to different formats."""
+    seconds = duration.seconds
+    minutes = (seconds % 3600) // 60
+    seconds = (seconds % 60)
+    return '{0:0>2}:{1:0>2}'.format(minutes, seconds)
 
 
 class ControlProcess(Thread):
@@ -278,7 +308,7 @@ class Hottop:
         """Start of the hottop."""
         self._log = self._logger()
         self._conn = None
-        self._roast = list()
+        self._roast = dict()
         self._roasting = False
         self._roast_start = None
         self._roast_end = None
@@ -373,6 +403,17 @@ class Hottop:
         self._config['bean_temp'] = 0
         self._config['chaff_tray'] = 1
 
+        self._roast['name'] = None
+        self._roast['input_weight'] = -1
+        self._roast['output_weight'] = -1
+        self._roast['operator'] = None
+        self._roast['start_time'] = None
+        self._roast['end_time'] = None
+        self._roast['duration'] = -1
+        self._roast['notes'] = None
+        self._roast['events'] = list()
+        self._roast['last'] = dict()
+
     def _callback(self, data):
         """Processor callback to clean-up stream data.
 
@@ -387,13 +428,21 @@ class Hottop:
         """
         if not self._roast_start:
             return
-        td = (now_time() - self._roast_start)
-        data['time'] = (td.total_seconds() + 60) / 60  # Seconds since starting
-        self._log.debug(data)
-        self._roast.append(data)
+        local = copy.deepcopy(data)
+        output = dict()
+        output['config'] = local
+        td = (now_time() - load_time(self._roast_start))
+        output['time'] = (td.total_seconds() + 60) / 60  # Seconds since starting
+        self._roast['duration'] = output['time']
+        self._roast['events'].append(copy.deepcopy(output))
+        local.update({'time': output['time']})
+        self._roast['last'] = local
+
         if self._user_callback:
             self._log.debug("Passing data back to client handler")
-            self._user_callback(data)
+            output['roast'] = self._roast
+            output['roasting'] = self._roasting
+            self._user_callback(output)
 
     def start(self, func=None):
         """Start the roaster control process.
@@ -408,7 +457,8 @@ class Hottop:
         self._user_callback = func
         self._process = ControlProcess(self._conn, self._config, self._q,
                                        self._log, callback=self._callback)
-        self._roast_start = now_time()
+        self._roast_start = now_time(str=True)
+        self._roast['start_time'] = self._roast_start
         self._process.start()
         self._roasting = True
 
@@ -419,7 +469,12 @@ class Hottop:
         """
         self._process.shutdown()
         self._roasting = False
-        self._roast_end = now_time()
+        self._roast_end = now_time(str=True)
+        self._roast['end_time'] = self._roast_end
+        self._roast['date'] = now_date(str=True)
+        et = load_time(self._roast['end_time'])
+        st = load_time(self._roast['start_time'])
+        self._roast['duration'] = timedelta2period(et - st)
 
     def drop(self):
         """Preset call to drop coffee from the roaster via thread signal.
@@ -427,6 +482,48 @@ class Hottop:
         :returns: None
         """
         self._process.drop()
+
+    def reset(self):
+        """Reset the internal roast properties.
+
+        :returns: None
+        """
+        self._roasting = False
+        self._roast_start = None
+        self._roast_end = None
+        self._roast = dict()
+        self._init_controls()
+
+    def add_roast_event(self, event):
+        """Add an event to the roast log.
+
+        This is used to ingest events like first crack or dropping of the
+        coffee. Beyond the event itself, we also add the time and current
+        state of the roast for context.
+
+        :param event: Details describing what happened
+        :type event: dict
+        :returns: dict
+        """
+        event.update({'time': self.get_roast_time(),
+                      'config': self.get_roast_properties()['last']})
+        self._roast['events'].append(event)
+        return self.get_roast_properties()
+
+    def get_roast(self):
+        """Get the roast information.
+
+        :returns: list
+        """
+        return self._roast
+
+    def get_roast_time(self):
+        """Get the roast time.
+
+        :returns: float
+        """
+        td = (now_time() - load_time(self._roast_start))
+        return (td.total_seconds() + 60) / 60
 
     def get_serial_state(self):
         """Get the state of the USB connection.
@@ -458,6 +555,33 @@ class Hottop:
         if type(interval) != float or type(interval) != int:
             raise InvalidInput("Interval value must be of float or int")
         self._config['interval']
+
+    def get_roast_properties(self):
+        """Get the roast properties.
+
+        This will return the complete diagnostics object of the roast object
+        which includes the timing, events and configuration details.
+
+        :returns: dict
+        """
+        return self._roast
+
+    def set_roast_properties(self, settings):
+        """Set the properties of the roast.
+
+        :param settings: General settings for the roast setup
+        :type settings: dict
+        :returns: None
+        :raises: InvalidInput
+        """
+        if type(settings) != dict:
+            raise InvalidInput("Properties value must be of dict")
+        valid = ['name', 'input_weight', 'output_weight', 'operator', 'notes',
+                 'coffee']
+        for key, value in settings.iteritems():
+            if key not in valid:
+                continue
+            self._roast[key] = value
 
     def get_heater(self):
         """Get the heater config.

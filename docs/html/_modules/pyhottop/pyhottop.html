@@ -157,11 +157,6 @@
         <span class="k">return</span> <span class="mi">0</span>
 
 
-<span class="k">def</span> <span class="nf">now_time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Get the current time.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-
-
 <span class="k">def</span> <span class="nf">hex2int</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert hex to an int.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mi">16</span><span class="p">)</span>
@@ -170,6 +165,41 @@
 <span class="k">def</span> <span class="nf">celsius2fahrenheit</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert temperatures.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="mf">1.8</span><span class="p">)</span> <span class="o">+</span> <span class="mi">32</span>
+
+
+<span class="k">def</span> <span class="nf">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the current time.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">now_date</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the current date.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">load_time</span><span class="p">(</span><span class="n">str_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the date string to a real datetime.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">str_time</span><span class="p">,</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">timedelta2millisecond</span><span class="p">(</span><span class="n">td</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get milliseconds from a timedelta.&quot;&quot;&quot;</span>
+    <span class="n">milliseconds</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">days</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">milliseconds</span> <span class="o">+=</span> <span class="n">td</span><span class="o">.</span><span class="n">seconds</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="n">milliseconds</span> <span class="o">+=</span> <span class="n">td</span><span class="o">.</span><span class="n">microseconds</span> <span class="o">/</span> <span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">milliseconds</span>
+
+
+<span class="k">def</span> <span class="nf">timedelta2period</span><span class="p">(</span><span class="n">duration</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert timedelta to different formats.&quot;&quot;&quot;</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">seconds</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="p">(</span><span class="n">seconds</span> <span class="o">%</span> <span class="mi">3600</span><span class="p">)</span> <span class="o">//</span> <span class="mi">60</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="p">(</span><span class="n">seconds</span> <span class="o">%</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;{0:0&gt;2}:{1:0&gt;2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ControlProcess"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess">[docs]</a><span class="k">class</span> <span class="nc">ControlProcess</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
@@ -397,7 +427,7 @@
         <span class="sd">&quot;&quot;&quot;Start of the hottop.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="bp">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="bp">None</span>
@@ -491,6 +521,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;external_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;input_weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;output_weight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;operator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;notes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="Hottop._callback"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._callback">[docs]</a>    <span class="k">def</span> <span class="nf">_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Processor callback to clean-up stream data.</span>
@@ -506,13 +547,21 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="n">td</span> <span class="o">=</span> <span class="p">(</span><span class="n">now_time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">)</span>
-        <span class="n">data</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>  <span class="c"># Seconds since starting</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">local</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">output</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
+        <span class="n">td</span> <span class="o">=</span> <span class="p">(</span><span class="n">now_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">))</span>
+        <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>  <span class="c"># Seconds since starting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+        <span class="n">local</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;time&#39;</span><span class="p">:</span> <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Passing data back to client handler&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">output</span><span class="p">[</span><span class="s">&#39;roast&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span>
+            <span class="n">output</span><span class="p">[</span><span class="s">&#39;roasting&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Hottop.start"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Start the roaster control process.</span>
@@ -527,7 +576,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span> <span class="o">=</span> <span class="n">func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">ControlProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span>
                                        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span> <span class="o">=</span> <span class="bp">True</span>
 </div>
@@ -538,7 +588,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">now_date</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">et</span> <span class="o">=</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">])</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timedelta2period</span><span class="p">(</span><span class="n">et</span> <span class="o">-</span> <span class="n">st</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Hottop.drop"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Preset call to drop coffee from the roaster via thread signal.</span>
@@ -546,6 +601,48 @@
 <span class="sd">        :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.reset"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset the internal roast properties.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_controls</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.add_roast_event"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.add_roast_event">[docs]</a>    <span class="k">def</span> <span class="nf">add_roast_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an event to the roast log.</span>
+
+<span class="sd">        This is used to ingest events like first crack or dropping of the</span>
+<span class="sd">        coffee. Beyond the event itself, we also add the time and current</span>
+<span class="sd">        state of the roast for context.</span>
+
+<span class="sd">        :param event: Details describing what happened</span>
+<span class="sd">        :type event: dict</span>
+<span class="sd">        :returns: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_time</span><span class="p">(),</span>
+                      <span class="s">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()[</span><span class="s">&#39;last&#39;</span><span class="p">]})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_roast"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_roast">[docs]</a>    <span class="k">def</span> <span class="nf">get_roast</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the roast information.</span>
+
+<span class="sd">        :returns: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_roast_time"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_roast_time">[docs]</a>    <span class="k">def</span> <span class="nf">get_roast_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the roast time.</span>
+
+<span class="sd">        :returns: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">td</span> <span class="o">=</span> <span class="p">(</span><span class="n">now_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
 </div>
 <div class="viewcode-block" id="Hottop.get_serial_state"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_serial_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_serial_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the state of the USB connection.</span>
@@ -577,6 +674,33 @@
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">float</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Interval value must be of float or int&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_roast_properties"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_roast_properties">[docs]</a>    <span class="k">def</span> <span class="nf">get_roast_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the roast properties.</span>
+
+<span class="sd">        This will return the complete diagnostics object of the roast object</span>
+<span class="sd">        which includes the timing, events and configuration details.</span>
+
+<span class="sd">        :returns: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_roast_properties"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_roast_properties">[docs]</a>    <span class="k">def</span> <span class="nf">set_roast_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the properties of the roast.</span>
+
+<span class="sd">        :param settings: General settings for the roast setup</span>
+<span class="sd">        :type settings: dict</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Properties value must be of dict&quot;</span><span class="p">)</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;input_weight&#39;</span><span class="p">,</span> <span class="s">&#39;output_weight&#39;</span><span class="p">,</span> <span class="s">&#39;operator&#39;</span><span class="p">,</span> <span class="s">&#39;notes&#39;</span><span class="p">,</span>
+                 <span class="s">&#39;coffee&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 </div>
 <div class="viewcode-block" id="Hottop.get_heater"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_heater">[docs]</a>    <span class="k">def</span> <span class="nf">get_heater</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the heater config.</span>
