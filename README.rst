@@ -6,6 +6,7 @@ Python Hottop Client
 .. image:: https://badge.fury.io/py/pyhottop.svg
     :target: https://badge.fury.io/py/pyhottop
 
+
 pyHottop gives you the power to control your Hottop KN-8828b-2k+ roaster directly through python code. **This library is meant to be used within applications and should not be used by itself to conduct a roast**. Questions, comments or for support needs, please use the issues_ page on Github.
 
 .. _issues: https://github.com/9b/pyhottop/issues
