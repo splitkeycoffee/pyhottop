@@ -19,6 +19,8 @@ This library provides full control of the Hottop roaster. Built-in callback func
     * Easy-to-use callbacks that return readings
     * Adjustable polling interval
     * Human-readable settings
+    * Flexible collection of data
+    * Debugging interface
 * Control the Hottop directly
     * Heater settings
     * Fan speeds

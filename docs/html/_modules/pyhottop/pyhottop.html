@@ -78,7 +78,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-11-24</a></li>
+</ul>
+</li>
 </ul>
 
           
@@ -117,6 +120,7 @@
           <div role="main" class="document">
             
   <h1>Source code for pyhottop.pyhottop</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Interface with the hottop roaster through the serial port.</span>
 
@@ -126,6 +130,10 @@
 <span class="sd">interface alone. Instead, it should be paired with a visual interface to avoid</span>
 <span class="sd">running the risk of fire, or damage. This code is provided as-is and the</span>
 <span class="sd">author is not responsible for any negative consequences for using the module.</span>
+
+<span class="sd">Marko Luther is listed in the credits here for his amazing work on Artisan. His</span>
+<span class="sd">application originally inspired the creation of this module and was helpful for</span>
+<span class="sd">understanding how to interface with the Hottop roaster serial interface.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Brandon Dixon&quot;</span>
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&quot;Copyright, Split Key Coffee&quot;</span>
@@ -150,7 +158,7 @@
 <span class="k">if</span> <span class="n">py2</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">Queue</span> <span class="kn">import</span> <span class="n">Queue</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">queue</span> <span class="kn">as</span> <span class="nn">queue</span>
+    <span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
 
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span><span class="p">,</span> <span class="n">Event</span>
 
@@ -498,7 +506,7 @@
                 <span class="k">pass</span>
         <span class="k">return</span> <span class="n">match</span>
 </div>
-<div class="viewcode-block" id="Hottop.connect"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Hottop.connect"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Connect to the USB for the hottop.</span>
 
 <span class="sd">        Attempt to discover the USB port used for the Hottop and then form a</span>
@@ -507,8 +515,12 @@
 <span class="sd">        :returns: bool</span>
 <span class="sd">        :raises SerialConnectionError:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autodiscover_usb</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Auto-discovered USB port: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">match</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">interface</span><span class="p">:</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_autodiscover_usb</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Auto-discovered USB port: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">match</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">USB_PORT</span> <span class="o">=</span> <span class="n">interface</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">serial</span><span class="o">.</span><span class="n">Serial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">USB_PORT</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BAUDRATE</span><span class="p">,</span>
                                        <span class="n">bytesize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">BYTE_SIZE</span><span class="p">,</span>

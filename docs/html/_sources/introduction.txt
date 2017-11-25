@@ -14,4 +14,4 @@ https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vc
 3. Plug your Hottop roaster into your laptop.
 4. Test connectivity to the roaster by running the diagnostic utility:
 
-``pyhottop-test``
+``pyhottop-test test``
