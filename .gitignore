@@ -10,3 +10,4 @@ setuptools-*
 venv/
 venv3/
 .pypirc
+.notes

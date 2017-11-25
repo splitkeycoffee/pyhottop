@@ -8,8 +8,8 @@ def read(fname):
 
 setup(
     name='pyhottop',
-    version='0.1.0',
-    description='',
+    version='0.1.1',
+    description='Interface for interacting with Hottop KN-8828b-2k+ roasters',
     url="https://github.com/9b/pyhottop",
     author="Brandon Dixon",
     author_email="brandon@splitkeycoffee.com",
