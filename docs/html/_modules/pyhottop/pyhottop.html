@@ -119,9 +119,25 @@
   <h1>Source code for pyhottop.pyhottop</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Interface with the hottop roaster through the serial port.</span>
+
+<span class="sd">This module is split into two pieces, a controlling thread for monitoring</span>
+<span class="sd">data from the serial interface and a user-facing object to adjust settings or</span>
+<span class="sd">read content back out. It&#39;s NOT recommended to conduct roasting with this</span>
+<span class="sd">interface alone. Instead, it should be paired with a visual interface to avoid</span>
+<span class="sd">running the risk of fire, or damage. This code is provided as-is and the</span>
+<span class="sd">author is not responsible for any negative consequences for using the module.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s">&quot;Brandon Dixon&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&quot;Copyright, Split Key Coffee&quot;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;Brandon Dixon&quot;</span><span class="p">,</span> <span class="s">&quot;Marko Luther&quot;</span><span class="p">]</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&quot;MIT&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;0.1.0&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s">&quot;Brandon Dixon (brandon@splitkeycoffee.com)&quot;</span>
+<span class="n">__email__</span> <span class="o">=</span> <span class="s">&quot;info@splitkeycoffee.com&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s">&quot;BETA&quot;</span>
 
 <span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -140,11 +156,13 @@
 
 
 <div class="viewcode-block" id="InvalidInput"><a class="viewcode-back" href="../../exceptions.html#pyhottop.pyhottop.InvalidInput">[docs]</a><span class="k">class</span> <span class="nc">InvalidInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
     <span class="sd">&quot;&quot;&quot;Exception to capture invalid input commands.&quot;&quot;&quot;</span>
     <span class="k">pass</span>
 
 </div>
 <div class="viewcode-block" id="SerialConnectionError"><a class="viewcode-back" href="../../exceptions.html#pyhottop.pyhottop.SerialConnectionError">[docs]</a><span class="k">class</span> <span class="nc">SerialConnectionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+
     <span class="sd">&quot;&quot;&quot;Exception to capture serial connection issues.&quot;&quot;&quot;</span>
     <span class="k">pass</span>
 
@@ -532,6 +550,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;notes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
 </div>
 <div class="viewcode-block" id="Hottop._callback"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._callback">[docs]</a>    <span class="k">def</span> <span class="nf">_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Processor callback to clean-up stream data.</span>
@@ -545,17 +564,19 @@
 <span class="sd">        :type data: dict</span>
 <span class="sd">        :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">:</span>
-            <span class="k">return</span>
         <span class="n">local</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="n">output</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="n">output</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
-        <span class="n">td</span> <span class="o">=</span> <span class="p">(</span><span class="n">now_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">))</span>
-        <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>  <span class="c"># Seconds since starting</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
-        <span class="n">local</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;time&#39;</span><span class="p">:</span> <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]})</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">:</span>
+            <span class="n">td</span> <span class="o">=</span> <span class="p">(</span><span class="n">now_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">))</span>
+            <span class="c"># Seconds since starting</span>
+            <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span>
+            <span class="n">local</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;time&#39;</span><span class="p">:</span> <span class="n">output</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]})</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Passing data back to client handler&quot;</span><span class="p">)</span>
@@ -567,7 +588,9 @@
         <span class="sd">&quot;&quot;&quot;Start the roaster control process.</span>
 
 <span class="sd">        This function will kick off the processing thread for the Hottop and</span>
-<span class="sd">        register any user-defined callback function.</span>
+<span class="sd">        register any user-defined callback function. By default, it will not</span>
+<span class="sd">        begin collecting any reading information or saving it. In order to do</span>
+<span class="sd">        that users, must issue the monitor/record bit via `set_monitor`.</span>
 
 <span class="sd">        :param func: Callback function for Hottop stream data</span>
 <span class="sd">        :type func: function</span>
@@ -576,27 +599,34 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span> <span class="o">=</span> <span class="n">func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">ControlProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span>
                                        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span> <span class="o">=</span> <span class="bp">True</span>
 </div>
 <div class="viewcode-block" id="Hottop.end"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;End the roaster control process via thread signal.</span>
 
+<span class="sd">        This simply sends an exit signal to the thread, and shuts it down. In</span>
+<span class="sd">        order to stop monitoring, call the `set_monitor` method with false.</span>
+
 <span class="sd">        :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span> <span class="o">=</span> <span class="bp">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">now_date</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="n">et</span> <span class="o">=</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">])</span>
-        <span class="n">st</span> <span class="o">=</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timedelta2period</span><span class="p">(</span><span class="n">et</span> <span class="o">-</span> <span class="n">st</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Hottop.drop"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Preset call to drop coffee from the roaster via thread signal.</span>
+
+<span class="sd">        This will set the following configuration on the roaster:</span>
+<span class="sd">        - drum_motor = 0</span>
+<span class="sd">        - heater = 0</span>
+<span class="sd">        - solenoid = 1</span>
+<span class="sd">        - cooling_motor = 1</span>
+<span class="sd">        - main_fan = 10</span>
+
+<span class="sd">        In order to power-off the roaster after dropping coffee, it&#39;s best to</span>
+<span class="sd">        use the shutdown method. It&#39;s assumed that cooling will occur for 5-10</span>
+<span class="sd">        minutes before shutting down.</span>
 
 <span class="sd">        :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -616,9 +646,11 @@
 <div class="viewcode-block" id="Hottop.add_roast_event"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.add_roast_event">[docs]</a>    <span class="k">def</span> <span class="nf">add_roast_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add an event to the roast log.</span>
 
-<span class="sd">        This is used to ingest events like first crack or dropping of the</span>
-<span class="sd">        coffee. Beyond the event itself, we also add the time and current</span>
-<span class="sd">        state of the roast for context.</span>
+<span class="sd">        This method should be used for registering events that may be worth</span>
+<span class="sd">        tracking like first crack, second crack and the dropping of coffee.</span>
+<span class="sd">        Similar to the standard reading output from the roaster, manually</span>
+<span class="sd">        created events will include the current configuration reading, time and</span>
+<span class="sd">        metadata passed in.</span>
 
 <span class="sd">        :param event: Details describing what happened</span>
 <span class="sd">        :type event: dict</span>
@@ -642,7 +674,7 @@
 <span class="sd">        :returns: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">td</span> <span class="o">=</span> <span class="p">(</span><span class="n">now_time</span><span class="p">()</span> <span class="o">-</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span><span class="p">))</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">+</span> <span class="mi">60</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 </div>
 <div class="viewcode-block" id="Hottop.get_serial_state"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_serial_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_serial_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the state of the USB connection.</span>
@@ -678,9 +710,6 @@
 <div class="viewcode-block" id="Hottop.get_roast_properties"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_roast_properties">[docs]</a>    <span class="k">def</span> <span class="nf">get_roast_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the roast properties.</span>
 
-<span class="sd">        This will return the complete diagnostics object of the roast object</span>
-<span class="sd">        which includes the timing, events and configuration details.</span>
-
 <span class="sd">        :returns: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span>
@@ -701,6 +730,42 @@
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Hottop.get_monitor"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_monitor">[docs]</a>    <span class="k">def</span> <span class="nf">get_monitor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the monitor config.</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Hottop.set_monitor"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.set_monitor">[docs]</a>    <span class="k">def</span> <span class="nf">set_monitor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">monitor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the monitor config.</span>
+
+<span class="sd">        This module assumes that users will connect to the roaster and get</span>
+<span class="sd">        reading information _before_ they want to begin collecting roast</span>
+<span class="sd">        details. This method is critical to enabling the collection of roast</span>
+<span class="sd">        information and ensuring it gets saved in memory.</span>
+
+<span class="sd">        :param monitor: Value to set the monitor</span>
+<span class="sd">        :type monitor: bool</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        :raises: InvalidInput</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">monitor</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidInput</span><span class="p">(</span><span class="s">&quot;Monitor value must be bool&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bool2int</span><span class="p">(</span><span class="n">monitor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="n">now_time</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">now_date</span><span class="p">(</span><span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">et</span> <span class="o">=</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;end_time&#39;</span><span class="p">])</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="n">load_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;start_time&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timedelta2period</span><span class="p">(</span><span class="n">et</span> <span class="o">-</span> <span class="n">st</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Hottop.get_heater"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.get_heater">[docs]</a>    <span class="k">def</span> <span class="nf">get_heater</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the heater config.</span>

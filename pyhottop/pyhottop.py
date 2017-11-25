@@ -1,8 +1,24 @@
 """
 Interface with the hottop roaster through the serial port.
+
+This module is split into two pieces, a controlling thread for monitoring
+data from the serial interface and a user-facing object to adjust settings or
+read content back out. It's NOT recommended to conduct roasting with this
+interface alone. Instead, it should be paired with a visual interface to avoid
+running the risk of fire, or damage. This code is provided as-is and the
+author is not responsible for any negative consequences for using the module.
 """
+__author__ = "Brandon Dixon"
+__copyright__ = "Copyright, Split Key Coffee"
+__credits__ = ["Brandon Dixon", "Marko Luther"]
+__license__ = "MIT"
+__version__ = "0.1.0"
+__maintainer__ = "Brandon Dixon (brandon@splitkeycoffee.com)"
+__email__ = "info@splitkeycoffee.com"
+__status__ = "BETA"
 
 import binascii
+import copy
 import datetime
 import glob
 import logging
@@ -21,11 +37,13 @@ from threading import Thread, Event
 
 
 class InvalidInput(Exception):
+
     """Exception to capture invalid input commands."""
     pass
 
 
 class SerialConnectionError(Exception):
+
     """Exception to capture serial connection issues."""
     pass
 
@@ -413,6 +431,7 @@ class Hottop:
         self._roast['notes'] = None
         self._roast['events'] = list()
         self._roast['last'] = dict()
+        self._roast['record'] = False
 
     def _callback(self, data):
         """Processor callback to clean-up stream data.
@@ -426,17 +445,19 @@ class Hottop:
         :type data: dict
         :returns: None
         """
-        if not self._roast_start:
-            return
         local = copy.deepcopy(data)
         output = dict()
         output['config'] = local
-        td = (now_time() - load_time(self._roast_start))
-        output['time'] = (td.total_seconds() + 60) / 60  # Seconds since starting
-        self._roast['duration'] = output['time']
-        self._roast['events'].append(copy.deepcopy(output))
-        local.update({'time': output['time']})
-        self._roast['last'] = local
+        if self._roast_start:
+            td = (now_time() - load_time(self._roast_start))
+            # Seconds since starting
+            output['time'] = ((td.total_seconds() + 60) / 60) - 1
+            self._roast['duration'] = output['time']
+            local.update({'time': output['time']})
+
+        if self._roast['record']:
+            self._roast['events'].append(copy.deepcopy(output))
+            self._roast['last'] = local
 
         if self._user_callback:
             self._log.debug("Passing data back to client handler")
@@ -448,7 +469,9 @@ class Hottop:
         """Start the roaster control process.
 
         This function will kick off the processing thread for the Hottop and
-        register any user-defined callback function.
+        register any user-defined callback function. By default, it will not
+        begin collecting any reading information or saving it. In order to do
+        that users, must issue the monitor/record bit via `set_monitor`.
 
         :param func: Callback function for Hottop stream data
         :type func: function
@@ -457,27 +480,34 @@ class Hottop:
         self._user_callback = func
         self._process = ControlProcess(self._conn, self._config, self._q,
                                        self._log, callback=self._callback)
-        self._roast_start = now_time(str=True)
-        self._roast['start_time'] = self._roast_start
         self._process.start()
         self._roasting = True
 
     def end(self):
         """End the roaster control process via thread signal.
 
+        This simply sends an exit signal to the thread, and shuts it down. In
+        order to stop monitoring, call the `set_monitor` method with false.
+
         :returns: None
         """
         self._process.shutdown()
         self._roasting = False
-        self._roast_end = now_time(str=True)
-        self._roast['end_time'] = self._roast_end
         self._roast['date'] = now_date(str=True)
-        et = load_time(self._roast['end_time'])
-        st = load_time(self._roast['start_time'])
-        self._roast['duration'] = timedelta2period(et - st)
 
     def drop(self):
         """Preset call to drop coffee from the roaster via thread signal.
+
+        This will set the following configuration on the roaster:
+        - drum_motor = 0
+        - heater = 0
+        - solenoid = 1
+        - cooling_motor = 1
+        - main_fan = 10
+
+        In order to power-off the roaster after dropping coffee, it's best to
+        use the shutdown method. It's assumed that cooling will occur for 5-10
+        minutes before shutting down.
 
         :returns: None
         """
@@ -497,9 +527,11 @@ class Hottop:
     def add_roast_event(self, event):
         """Add an event to the roast log.
 
-        This is used to ingest events like first crack or dropping of the
-        coffee. Beyond the event itself, we also add the time and current
-        state of the roast for context.
+        This method should be used for registering events that may be worth
+        tracking like first crack, second crack and the dropping of coffee.
+        Similar to the standard reading output from the roaster, manually
+        created events will include the current configuration reading, time and
+        metadata passed in.
 
         :param event: Details describing what happened
         :type event: dict
@@ -523,7 +555,7 @@ class Hottop:
         :returns: float
         """
         td = (now_time() - load_time(self._roast_start))
-        return (td.total_seconds() + 60) / 60
+        return ((td.total_seconds() + 60) / 60) - 1
 
     def get_serial_state(self):
         """Get the state of the USB connection.
@@ -559,9 +591,6 @@ class Hottop:
     def get_roast_properties(self):
         """Get the roast properties.
 
-        This will return the complete diagnostics object of the roast object
-        which includes the timing, events and configuration details.
-
         :returns: dict
         """
         return self._roast
@@ -582,6 +611,42 @@ class Hottop:
             if key not in valid:
                 continue
             self._roast[key] = value
+
+    def get_monitor(self):
+        """Get the monitor config.
+
+        :returns: None
+        """
+        return self._roast['record']
+
+    def set_monitor(self, monitor):
+        """Set the monitor config.
+
+        This module assumes that users will connect to the roaster and get
+        reading information _before_ they want to begin collecting roast
+        details. This method is critical to enabling the collection of roast
+        information and ensuring it gets saved in memory.
+
+        :param monitor: Value to set the monitor
+        :type monitor: bool
+        :returns: None
+        :raises: InvalidInput
+        """
+        if type(monitor) != bool:
+            raise InvalidInput("Monitor value must be bool")
+        self._roast['record'] = bool2int(monitor)
+        self._q.put(self._config)
+
+        if self._roast['record']:
+            self._roast_start = now_time(str=True)
+            self._roast['start_time'] = self._roast_start
+        else:
+            self._roast_end = now_time(str=True)
+            self._roast['end_time'] = self._roast_end
+            self._roast['date'] = now_date(str=True)
+            et = load_time(self._roast['end_time'])
+            st = load_time(self._roast['start_time'])
+            self._roast['duration'] = timedelta2period(et - st)
 
     def get_heater(self):
         """Get the heater config.
