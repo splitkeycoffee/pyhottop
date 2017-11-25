@@ -7,6 +7,10 @@ read content back out. It's NOT recommended to conduct roasting with this
 interface alone. Instead, it should be paired with a visual interface to avoid
 running the risk of fire, or damage. This code is provided as-is and the
 author is not responsible for any negative consequences for using the module.
+
+Marko Luther is listed in the credits here for his amazing work on Artisan. His
+application originally inspired the creation of this module and was helpful for
+understanding how to interface with the Hottop roaster serial interface.
 """
 __author__ = "Brandon Dixon"
 __copyright__ = "Copyright, Split Key Coffee"
