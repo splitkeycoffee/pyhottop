@@ -17,7 +17,14 @@ setup(
     packages=find_packages(),
     install_requires=['pyserial'],
     long_description=read('README.rst'),
-    classifiers=[],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English',
+        'Programming Language :: Python',
+        'Topic :: Software Development :: Libraries'
+    ],
     package_data={
         'pyhottop': [],
     },
