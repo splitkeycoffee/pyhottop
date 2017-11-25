@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Interface with the hottop roaster through the serial port.
 
@@ -35,7 +36,7 @@ py2 = sys.version[0] == '2'
 if py2:
     from Queue import Queue
 else:
-    import queue as queue
+    from queue import Queue
 
 from threading import Thread, Event
 
@@ -383,7 +384,7 @@ class Hottop:
                 pass
         return match
 
-    def connect(self):
+    def connect(self, interface=None):
         """Connect to the USB for the hottop.
 
         Attempt to discover the USB port used for the Hottop and then form a
@@ -392,8 +393,12 @@ class Hottop:
         :returns: bool
         :raises SerialConnectionError:
         """
-        match = self._autodiscover_usb()
-        self._log.debug("Auto-discovered USB port: %s" % match)
+        if not interface:
+            match = self._autodiscover_usb()
+            self._log.debug("Auto-discovered USB port: %s" % match)
+        else:
+            self.USB_PORT = interface
+
         try:
             self._conn = serial.Serial(self.USB_PORT, baudrate=self.BAUDRATE,
                                        bytesize=self.BYTE_SIZE,

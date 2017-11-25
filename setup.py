@@ -18,9 +18,13 @@ setup(
     install_requires=['pyserial'],
     long_description=read('README.rst'),
     classifiers=[],
-    entry_points={},
     package_data={
         'pyhottop': [],
+    },
+    entry_points={
+        'console_scripts': [
+            'pyhottop-test = pyhottop.cli.config:main'
+        ]
     },
     include_package_data=True,
     zip_safe=False,

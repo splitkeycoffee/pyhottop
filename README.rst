@@ -21,7 +21,7 @@ https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vc
 3. Plug your Hottop roaster into your laptop.
 4. Test connectivity to the roaster by running the diagnostic utility:
 
-``pyhottop-test``
+``pyhottop-test test``
 
 
 Features
@@ -33,6 +33,8 @@ This library provides full control of the Hottop roaster. Built-in callback func
     * Easy-to-use callbacks that return readings
     * Adjustable polling interval
     * Human-readable settings
+    * Flexible collection of data
+    * Debugging interface
 * Control the Hottop directly
     * Heater settings
     * Fan speeds
