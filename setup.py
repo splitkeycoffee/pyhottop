@@ -8,9 +8,9 @@ def read(fname):
 
 setup(
     name='pyhottop',
-    version='0.1.1',
+    version='0.1.2',
     description='Interface for interacting with Hottop KN-8828b-2k+ roasters',
-    url="https://github.com/9b/pyhottop",
+    url="https://github.com/splitkeycoffee/pyhottop",
     author="Brandon Dixon",
     author_email="brandon@splitkeycoffee.com",
     license="MIT",
@@ -36,5 +36,5 @@ setup(
     include_package_data=True,
     zip_safe=False,
     keywords=['coffee', 'coffee roasting', 'hottop', 'coffee tech'],
-    download_url='https://github.com/9b/pyhottop/archive/master.zip'
+    download_url='https://github.com/splitkeycoffee/pyhottop/archive/master.zip'
 )
