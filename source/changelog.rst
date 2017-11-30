@@ -2,6 +2,13 @@ Changelog
 =========
 Running list of changes to the library.
 
+2017-11-29
+~~~~~~~~~~
+* Bugfix: Replaced existing extenal_temp with environment_temp
+* Bugfix: Fixed issue with buffer retry loop where it was not being called
+* Change: Adjusted default interval to 1 second to avoid buffer issues
+* Change: Toggle serial connection if having trouble reading buffer
+
 2017-11-28
 ----------
 * Change: Adjusted duration to be of format MM:SS instead of total seconds

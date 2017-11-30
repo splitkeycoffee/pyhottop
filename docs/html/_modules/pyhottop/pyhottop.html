@@ -79,8 +79,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-11-28</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">2017-11-24</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-11-29</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id2">2017-11-28</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id3">2017-11-24</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -342,12 +345,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushOutput</span><span class="p">()</span>
         <span class="nb">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
         <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Retry count reachd on buffer check&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">return</span> <span class="bp">False</span>
 
         <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -355,7 +361,7 @@
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
         <span class="n">et</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">23</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">24</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;external_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">et</span><span class="p">)</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">et</span><span class="p">)</span>
         <span class="n">bt</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">25</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">26</span><span class="p">])</span>
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">bt</span><span class="p">)</span>
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">16</span><span class="p">])</span>
@@ -549,7 +555,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTERVAL</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;external_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
