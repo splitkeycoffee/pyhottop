@@ -295,7 +295,7 @@ class ControlProcess(Thread):
 
             if self.cooldown.is_set():
                 self._log.debug("Cool down process triggered")
-                self._config['drum_motor'] = 0
+                self._config['drum_motor'] = 1
                 self._config['heater'] = 0
                 self._config['solenoid'] = 1
                 self._config['cooling_motor'] = 1

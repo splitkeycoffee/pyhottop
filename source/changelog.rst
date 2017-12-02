@@ -2,6 +2,10 @@ Changelog
 =========
 Running list of changes to the library.
 
+2017-12-01
+~~~~~~~~~~
+* Bugfix: Turned drum motor on when doing a cool-down to push beans out
+
 2017-11-29
 ~~~~~~~~~~
 * Bugfix: Replaced existing extenal_temp with environment_temp
