@@ -79,9 +79,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-11-29</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id2">2017-11-28</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id3">2017-11-24</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-12-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">2017-12-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id3">2017-11-29</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id4">2017-11-28</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id5">2017-11-24</a></li>
 </ul>
 </li>
 </ul>
@@ -156,6 +158,7 @@
 <span class="kn">import</span> <span class="nn">serial</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">linregress</span>
 
 <span class="n">py2</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;2&#39;</span>
 
@@ -165,6 +168,7 @@
     <span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">Queue</span>
 
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span><span class="p">,</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
 
 
 <div class="viewcode-block" id="InvalidInput"><a class="viewcode-back" href="../../exceptions.html#pyhottop.pyhottop.InvalidInput">[docs]</a><span class="k">class</span> <span class="nc">InvalidInput</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -249,6 +253,9 @@
 <span class="sd">    :returns: ControlProces instance</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">MAX_BOUND_TEMP</span> <span class="o">=</span> <span class="mi">500</span>
+    <span class="n">MIN_BOUND_TEMP</span> <span class="o">=</span> <span class="mi">100</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Extend threads to support more control logic.&quot;&quot;&quot;</span>
         <span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -286,6 +293,9 @@
         <span class="n">config</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;main_fan&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;solenoid&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;drum_motor&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;heater&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c"># Override the user here since the drum MUST be on for heat</span>
+            <span class="n">config</span><span class="p">[</span><span class="mi">17</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">config</span><span class="p">[</span><span class="mi">18</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="mi">35</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[:</span><span class="mi">35</span><span class="p">]])</span> <span class="o">&amp;</span> <span class="mh">0xFF</span>
         <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -318,6 +328,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Validating the buffer&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Buffer was empty&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Closing connection&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">return</span> <span class="bp">False</span>
         <span class="n">p0</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">p1</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -340,21 +353,26 @@
 <span class="sd">        :returns: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Reopening connection&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushInput</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushOutput</span><span class="p">()</span>
         <span class="nb">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
-        <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Retry count reachd on buffer check&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">36</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Buffer length did not match 36&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Closing connection&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Retry count reached on buffer check&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">False</span>
 
         <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
@@ -368,8 +386,31 @@
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">17</span><span class="p">])</span>
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">18</span><span class="p">])</span>
         <span class="n">settings</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">19</span><span class="p">])</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;buffer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">buffer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">return</span> <span class="n">settings</span>
+</div>
+<div class="viewcode-block" id="ControlProcess._valid_config"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._valid_config">[docs]</a>    <span class="k">def</span> <span class="nf">_valid_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scan through the returned settings to ensure they appear sane.</span>
+
+<span class="sd">        There are time when the returned buffer has the proper information, but</span>
+<span class="sd">        the reading is inaccurate. When this happens, temperatures will swing</span>
+<span class="sd">        or system values will be set to improper values.</span>
+
+<span class="sd">        :param settings: Configuration derived from the buffer</span>
+<span class="sd">        :type settings: dict</span>
+<span class="sd">        :returns: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_BOUND_TEMP</span> <span class="ow">or</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MIN_BOUND_TEMP</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_BOUND_TEMP</span> <span class="ow">or</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MIN_BOUND_TEMP</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">binary</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">,</span> <span class="s">&#39;chaff_tray&#39;</span><span class="p">,</span> <span class="s">&#39;solenoid&#39;</span><span class="p">,</span> <span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">binary</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">))</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
 </div>
 <div class="viewcode-block" id="ControlProcess._wake_up"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._wake_up">[docs]</a>    <span class="k">def</span> <span class="nf">_wake_up</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Wake the machine up to avoid race conditions.</span>
@@ -409,17 +450,19 @@
 
         <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exit</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
             <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">()</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;valid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_config</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cb</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cooldown</span><span class="o">.</span><span class="n">is_set</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Cool down process triggered&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_send_config</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;valid&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_send_config</span><span class="p">()</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">])</span>
 </div>
 <div class="viewcode-block" id="ControlProcess.drop"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess.drop">[docs]</a>    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -454,7 +497,7 @@
     <span class="n">STOPBITS</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">TIMEOUT</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">LOG_LEVEL</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
-    <span class="n">INTERVAL</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">INTERVAL</span> <span class="o">=</span> <span class="mf">0.6</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Start of the hottop.&quot;&quot;&quot;</span>
@@ -465,6 +508,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_window</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="nb">list</span><span class="p">(),</span> <span class="mi">5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_controls</span><span class="p">()</span>
 
@@ -570,6 +614,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;charge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;turning_point&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
 </div>
 <div class="viewcode-block" id="Hottop._callback"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._callback">[docs]</a>    <span class="k">def</span> <span class="nf">_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Processor callback to clean-up stream data.</span>
@@ -597,14 +643,68 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;duration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timedelta2period</span><span class="p">(</span><span class="n">ct</span> <span class="o">-</span> <span class="n">st</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;record&#39;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+            <span class="n">copied</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_derive_charge</span><span class="p">(</span><span class="n">copied</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_derive_turning_point</span><span class="p">(</span><span class="n">copied</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">copied</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">local</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Passing data back to client handler&quot;</span><span class="p">)</span>
             <span class="n">output</span><span class="p">[</span><span class="s">&#39;roast&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span>
             <span class="n">output</span><span class="p">[</span><span class="s">&#39;roasting&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roasting</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">local</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;valid&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Hottop._derive_charge"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._derive_charge">[docs]</a>    <span class="k">def</span> <span class="nf">_derive_charge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Use a temperature window to identify the roast charge.</span>
+
+<span class="sd">        The charge will manifest as a sudden downward trend on the temperature.</span>
+<span class="sd">        Once found, we save it and avoid overwriting. The charge is needed in</span>
+<span class="sd">        order to derive the turning point.</span>
+
+<span class="sd">        :param config: Current snapshot of the configuration</span>
+<span class="sd">        :type config: dict</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;charge&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_window</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">temp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_window</span><span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">])</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">])</span>
+        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">linregress</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">slope</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;charge&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_roast_event</span><span class="p">({</span><span class="s">&#39;event&#39;</span><span class="p">:</span> <span class="s">&#39;Charge&#39;</span><span class="p">})</span>
+            <span class="k">return</span> <span class="n">config</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Hottop._derive_turning_point"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop._derive_turning_point">[docs]</a>    <span class="k">def</span> <span class="nf">_derive_turning_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Use a temperature window to identify the roast turning point.</span>
+
+<span class="sd">        Turning point relies on the charge being set first. We use the rolling</span>
+<span class="sd">        5-point window to measure slope. If we show a positive trend after</span>
+<span class="sd">        the charge, then the temperature has begun to turn.</span>
+
+<span class="sd">        :param config: Current snapshot of the configuration</span>
+<span class="sd">        :type config: dict</span>
+<span class="sd">        :returns: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;charge&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;turning_point&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_window</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">time</span><span class="p">,</span> <span class="n">temp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_window</span><span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">])</span>
+            <span class="n">temp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">])</span>
+        <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">linregress</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">slope</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;turning_point&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s">&#39;last&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_roast_event</span><span class="p">({</span><span class="s">&#39;event&#39;</span><span class="p">:</span> <span class="s">&#39;Turning Point&#39;</span><span class="p">})</span>
+            <span class="k">return</span> <span class="n">config</span>
+        <span class="k">return</span> <span class="bp">None</span>
 </div>
 <div class="viewcode-block" id="Hottop.start"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Start the roaster control process.</span>
