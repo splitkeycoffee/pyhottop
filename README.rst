@@ -55,6 +55,13 @@ This library provides full control of the Hottop roaster. Built-in callback func
 Changelog
 ---------
 
+2017-12-02
+~~~~~~~~~~
+* Bugfix: Called the proper logging object on buffer measurement
+* Change: Added raw buffer responses to the event log
+* Feature: Added a validate routine to the buffer read to account for inaccurate responses from the roaster
+* Feature: Automatically derive charge and turning point events based on temperature data
+
 2017-12-01
 ~~~~~~~~~~
 * Bugfix: Turned drum motor on when doing a cool-down to push beans out
