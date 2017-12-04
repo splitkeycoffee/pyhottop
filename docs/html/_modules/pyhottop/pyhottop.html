@@ -79,13 +79,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-12-02</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">2017-12-01</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id3">2017-11-29</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id4">2017-11-28</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../changelog.html#id5">2017-11-24</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-12-03</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">2017-12-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id3">2017-12-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id4">2017-11-29</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id5">2017-11-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id6">2017-11-24</a></li>
 </ul>
 </li>
 </ul>
@@ -254,7 +253,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">MAX_BOUND_TEMP</span> <span class="o">=</span> <span class="mi">500</span>
-    <span class="n">MIN_BOUND_TEMP</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">MIN_BOUND_TEMP</span> <span class="o">=</span> <span class="mi">50</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Extend threads to support more control logic.&quot;&quot;&quot;</span>
@@ -359,35 +358,38 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">flushOutput</span><span class="p">()</span>
         <span class="nb">buffer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">36</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">36</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Buffer length did not match 36&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Buffer length (</span><span class="si">%d</span><span class="s">) did not match 36&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nb">buffer</span><span class="p">))</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">isOpen</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Closing connection&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
         <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="nb">buffer</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Retry count reached on buffer check&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-        <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
-        <span class="n">et</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">23</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">24</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">et</span><span class="p">)</span>
-        <span class="n">bt</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">25</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">26</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">bt</span><span class="p">)</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">16</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">17</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">18</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">19</span><span class="p">])</span>
-        <span class="n">settings</span><span class="p">[</span><span class="s">&#39;buffer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">buffer</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;heater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">10</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">12</span><span class="p">])</span>
+            <span class="n">et</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">23</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">24</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">et</span><span class="p">)</span>
+            <span class="n">bt</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">25</span><span class="p">]</span> <span class="o">+</span> <span class="nb">buffer</span><span class="p">[</span><span class="mi">26</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">celsius2fahrenheit</span><span class="p">(</span><span class="n">bt</span><span class="p">)</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;solenoid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">16</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">17</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">18</span><span class="p">])</span>
+            <span class="n">settings</span><span class="p">[</span><span class="s">&#39;chaff_tray&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hex2int</span><span class="p">(</span><span class="nb">buffer</span><span class="p">[</span><span class="mi">19</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;Pulled a cache configuration!&quot;</span><span class="p">)</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_config</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">settings</span>
 </div>
 <div class="viewcode-block" id="ControlProcess._valid_config"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.ControlProcess._valid_config">[docs]</a>    <span class="k">def</span> <span class="nf">_valid_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">):</span>
@@ -405,10 +407,12 @@
                 <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;environment_temp&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MIN_BOUND_TEMP</span><span class="p">)</span> <span class="ow">or</span>
             <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_BOUND_TEMP</span> <span class="ow">or</span>
                 <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s">&#39;bean_temp&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MIN_BOUND_TEMP</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Temperatures are outside of bounds&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">False</span>
         <span class="n">binary</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;drum_motor&#39;</span><span class="p">,</span> <span class="s">&#39;chaff_tray&#39;</span><span class="p">,</span> <span class="s">&#39;solenoid&#39;</span><span class="p">,</span> <span class="s">&#39;cooling_motor&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">binary</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">))</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Settings show invalid values&#39;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="bp">False</span>
         <span class="k">return</span> <span class="bp">True</span>
 </div>
@@ -462,6 +466,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;main_fan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
 
             <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s">&#39;valid&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Settings were valid, sending...&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_send_config</span><span class="p">()</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">[</span><span class="s">&#39;interval&#39;</span><span class="p">])</span>
 </div>
@@ -718,6 +723,7 @@
 <span class="sd">        :type func: function</span>
 <span class="sd">        :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>  <span class="c"># Accounts for anything left behind</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span> <span class="o">=</span> <span class="n">func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">ControlProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span>
                                        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)</span>
@@ -763,6 +769,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast_start</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast_end</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_window</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="nb">list</span><span class="p">(),</span> <span class="mi">5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_controls</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="Hottop.add_roast_event"><a class="viewcode-back" href="../../code.html#pyhottop.pyhottop.Hottop.add_roast_event">[docs]</a>    <span class="k">def</span> <span class="nf">add_roast_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>

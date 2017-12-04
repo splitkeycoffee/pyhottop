@@ -2,6 +2,12 @@ Changelog
 =========
 Running list of changes to the library.
 
+2017-12-03
+~~~~~~~~~~
+* Change: Wrap the buffer read and pull from cache if it continues to fail
+* Change: Adjusted lower bound temperature to 50
+* Feature: Reset all the roast settings when starting a roast
+
 2017-12-02
 ~~~~~~~~~~
 * Bugfix: Called the proper logging object on buffer measurement
@@ -21,12 +27,12 @@ Running list of changes to the library.
 * Change: Toggle serial connection if having trouble reading buffer
 
 2017-11-28
-----------
+~~~~~~~~~~
 * Change: Adjusted duration to be of format MM:SS instead of total seconds
 * Change: Return roast state when toggling monitoring
 
 2017-11-24
-----------
+~~~~~~~~~~
 * Feature: several new methods for getting additional roast details
 * Change: Refactored code related to tracking roast properties and timing
 * Change: Updated documentation within the code

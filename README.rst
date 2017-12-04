@@ -55,6 +55,12 @@ This library provides full control of the Hottop roaster. Built-in callback func
 Changelog
 ---------
 
+2017-12-03
+~~~~~~~~~~
+* Change: Wrap the buffer read and pull from cache if it continues to fail
+* Change: Adjusted lower bound temperature to 50
+* Feature: Reset all the roast settings when starting a roast
+
 2017-12-02
 ~~~~~~~~~~
 * Bugfix: Called the proper logging object on buffer measurement
