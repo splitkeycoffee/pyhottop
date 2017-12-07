@@ -79,12 +79,13 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">2017-12-03</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">2017-12-02</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">2017-12-01</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id4">2017-11-29</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id5">2017-11-28</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id6">2017-11-24</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">2017-12-06</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">2017-12-03</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">2017-12-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">2017-12-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">2017-11-29</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">2017-11-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">2017-11-24</a></li>
 </ul>
 </li>
 </ul>
@@ -128,15 +129,21 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <p>Running list of changes to the library.</p>
 <div class="section" id="id1">
-<h2>2017-12-03<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<h2>2017-12-06<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Change: Keep the drum on by default to avoid any stalls</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>2017-12-03<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Change: Wrap the buffer read and pull from cache if it continues to fail</li>
 <li>Change: Adjusted lower bound temperature to 50</li>
 <li>Feature: Reset all the roast settings when starting a roast</li>
 </ul>
 </div>
-<div class="section" id="id2">
-<h2>2017-12-02<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h2>2017-12-02<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Bugfix: Called the proper logging object on buffer measurement</li>
 <li>Change: Added raw buffer responses to the event log</li>
@@ -144,14 +151,14 @@
 <li>Feature: Automatically derive charge and turning point events based on temperature data</li>
 </ul>
 </div>
-<div class="section" id="id3">
-<h2>2017-12-01<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id4">
+<h2>2017-12-01<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Bugfix: Turned drum motor on when doing a cool-down to push beans out</li>
 </ul>
 </div>
-<div class="section" id="id4">
-<h2>2017-11-29<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id5">
+<h2>2017-11-29<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Bugfix: Replaced existing extenal_temp with environment_temp</li>
 <li>Bugfix: Fixed issue with buffer retry loop where it was not being called</li>
@@ -159,15 +166,15 @@
 <li>Change: Toggle serial connection if having trouble reading buffer</li>
 </ul>
 </div>
-<div class="section" id="id5">
-<h2>2017-11-28<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id6">
+<h2>2017-11-28<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Change: Adjusted duration to be of format MM:SS instead of total seconds</li>
 <li>Change: Return roast state when toggling monitoring</li>
 </ul>
 </div>
-<div class="section" id="id6">
-<h2>2017-11-24<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id7">
+<h2>2017-11-24<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Feature: several new methods for getting additional roast details</li>
 <li>Change: Refactored code related to tracking roast properties and timing</li>

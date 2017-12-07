@@ -55,6 +55,10 @@ This library provides full control of the Hottop roaster. Built-in callback func
 Changelog
 ---------
 
+2017-12-06
+~~~~~~~~~~
+* Change: Keep the drum on by default to avoid any stalls
+
 2017-12-03
 ~~~~~~~~~~
 * Change: Wrap the buffer read and pull from cache if it continues to fail
