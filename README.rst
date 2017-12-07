@@ -1,6 +1,6 @@
 Python Hottop Client
 ====================
-.. image:: http://pyhottop.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/pyhottop/badge/?version=latest
     :target: http://pyhottop.readthedocs.io/en/latest/?badge=latest
 
 .. image:: https://badge.fury.io/py/pyhottop.svg
