@@ -79,13 +79,14 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../exceptions.html">Exceptions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-12-06</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">2017-12-03</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id3">2017-12-02</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id4">2017-12-01</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id5">2017-11-29</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id6">2017-11-28</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id7">2017-11-24</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id1">2017-12-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id2">2017-12-06</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id3">2017-12-03</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id4">2017-12-02</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id5">2017-12-01</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id6">2017-11-29</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id7">2017-11-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changelog.html#id8">2017-11-24</a></li>
 </ul>
 </li>
 </ul>
@@ -724,7 +725,6 @@
 <span class="sd">        :type func: function</span>
 <span class="sd">        :returns: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>  <span class="c"># Accounts for anything left behind</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_callback</span> <span class="o">=</span> <span class="n">func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">ControlProcess</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span>
                                        <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)</span>

@@ -2,6 +2,10 @@ Changelog
 =========
 Running list of changes to the library.
 
+2017-12-10
+~~~~~~~~~~
+* Bugfix: Removed the reset on start as it clears any properties set by the user
+
 2017-12-06
 ~~~~~~~~~~
 * Change: Keep the drum on by default to avoid any stalls
