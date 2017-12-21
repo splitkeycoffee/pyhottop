@@ -54,6 +54,9 @@ This library provides full control of the Hottop roaster. Built-in callback func
 
 Changelog
 ---------
+2017-12-20
+~~~~~~~~~~
+* Feature: Added a mock service to simulate a roast without being connected to a machine
 
 2017-12-10
 ~~~~~~~~~~
