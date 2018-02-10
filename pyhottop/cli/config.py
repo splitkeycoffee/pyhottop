@@ -41,5 +41,6 @@ def main():
             sys.exit(1)
         print("[*] Successfully connected to the roaster!")
 
+
 if __name__ == '__main__':
     main()

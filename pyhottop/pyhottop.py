@@ -13,15 +13,6 @@ Marko Luther is listed in the credits here for his amazing work on Artisan. His
 application originally inspired the creation of this module and was helpful for
 understanding how to interface with the Hottop roaster serial interface.
 """
-__author__ = "Brandon Dixon"
-__copyright__ = "Copyright, Split Key Coffee"
-__credits__ = ["Brandon Dixon", "Marko Luther"]
-__license__ = "MIT"
-__version__ = "0.1.0"
-__maintainer__ = "Brandon Dixon (brandon@splitkeycoffee.com)"
-__email__ = "info@splitkeycoffee.com"
-__status__ = "BETA"
-
 import binascii
 import copy
 import datetime
@@ -31,6 +22,8 @@ import serial
 import sys
 import time
 from scipy.stats import linregress
+from threading import Thread, Event
+from collections import deque
 
 from .mock import MockProcess
 
@@ -41,8 +34,14 @@ if py2:
 else:
     from queue import Queue
 
-from threading import Thread, Event
-from collections import deque
+__author__ = "Brandon Dixon"
+__copyright__ = "Copyright, Split Key Coffee"
+__credits__ = ["Brandon Dixon", "Marko Luther"]
+__license__ = "MIT"
+__version__ = "0.1.0"
+__maintainer__ = "Brandon Dixon (brandon@splitkeycoffee.com)"
+__email__ = "info@splitkeycoffee.com"
+__status__ = "BETA"
 
 
 class InvalidInput(Exception):
@@ -156,7 +155,7 @@ class ControlProcess(Thread):
 
         :returns: Byte array of the prepared configuration.
         """
-        config = bytearray([0x00]*36)
+        config = bytearray([0x00] * 36)
         config[0] = 0xA5
         config[1] = 0x96
         config[2] = 0xB0
@@ -264,7 +263,7 @@ class ControlProcess(Thread):
             settings['cooling_motor'] = hex2int(buffer[18])
             settings['chaff_tray'] = hex2int(buffer[19])
             self._retry_count = 0
-        except Exception as e:
+        except Exception:
             self._log.error("Pulled a cache configuration!")
             settings = self._generate_config()
         return settings
@@ -497,7 +496,7 @@ class Hottop:
         self._roast['duration'] = -1
         self._roast['notes'] = None
         self._roast['events'] = list()
-        self._roast['last'] = dict()
+        self._roast['last'] = None
         self._roast['record'] = False
         self._roast['charge'] = None
         self._roast['turning_point'] = None
@@ -532,6 +531,10 @@ class Hottop:
             self._derive_charge(copied['config'])
             self._derive_turning_point(copied['config'])
             self._roast['events'].append(copied)
+
+            if self._roast['last']:
+                delta = local['bean_temp'] - self._roast['last']['bean_temp']
+                output['config']['delta_bean_temp'] = delta
             self._roast['last'] = local
 
         if self._user_callback:
@@ -578,6 +581,8 @@ class Hottop:
         :returns: None
         """
         if not self._roast.get('charge') or self._roast.get('turning_point'):
+            return None
+        if self._roast['charge']['bean_temp'] == config['bean_temp']:
             return None
         self._window.append(config)
         time, temp = list(), list()
