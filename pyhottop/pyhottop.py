@@ -673,8 +673,26 @@ class Hottop:
         :type event: dict
         :returns: dict
         """
-        event.update({'time': self.get_roast_time(),
-                      'config': self.get_roast_properties()['last']})
+        event_time = self.get_roast_time()
+
+        def get_valid_config():
+            """Keep grabbing configs until we have a valid one.
+
+            In rare cases, the configuration will be invalid when the user
+            registers an event. This malformation can occur across several
+            events, so we use this helper to find a valid config to associate
+            to the event while preserving the original time. Due to fast
+            interval checking, this is not liable to skew data that much and
+            it's better than extreme false data.
+            """
+            config = self.get_roast_properties()['last']
+            if not config['valid']:
+                self._log.debug("Invalid config at event time, retrying...")
+                self.get_valid_config()
+            return config
+
+        event.update({'time': event_time,
+                      'config': get_valid_config()})
         self._roast['events'].append(event)
         return self.get_roast_properties()
 
