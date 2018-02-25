@@ -833,8 +833,26 @@
 <span class="sd">        :type event: dict</span>
 <span class="sd">        :returns: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">event</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_time</span><span class="p">(),</span>
-                      <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()[</span><span class="s1">&#39;last&#39;</span><span class="p">]})</span>
+        <span class="n">event_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_time</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">get_valid_config</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;Keep grabbing configs until we have a valid one.</span>
+
+<span class="sd">            In rare cases, the configuration will be invalid when the user</span>
+<span class="sd">            registers an event. This malformation can occur across several</span>
+<span class="sd">            events, so we use this helper to find a valid config to associate</span>
+<span class="sd">            to the event while preserving the original time. Due to fast</span>
+<span class="sd">            interval checking, this is not liable to skew data that much and</span>
+<span class="sd">            it&#39;s better than extreme false data.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()[</span><span class="s1">&#39;last&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;valid&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Invalid config at event time, retrying...&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_valid_config</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">config</span>
+
+        <span class="n">event</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">event_time</span><span class="p">,</span>
+                      <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="n">get_valid_config</span><span class="p">()})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roast</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()</span></div>
 

@@ -2,6 +2,10 @@ Changelog
 =========
 Running list of changes to the library.
 
+2017-02-24
+~~~~~~~~~~
+* Change: Added logic to add event code to find a valid configuration before saving
+
 2017-02-10
 ~~~~~~~~~~
 * Change: Added logic to turning point logic to avoid setting too soon
