@@ -762,7 +762,7 @@ class Hottop:
             raise InvalidInput("Properties value must be of dict")
         valid = ['name', 'input_weight', 'output_weight', 'operator', 'notes',
                  'coffee']
-        for key, value in settings.iteritems():
+        for key, value in settings.items():
             if key not in valid:
                 continue
             self._roast[key] = value
