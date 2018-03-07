@@ -57,6 +57,7 @@ Changelog
 2017-03-07
 ~~~~~~~~~~
 * Change: Removed non-python3 dict method
+* Bugfix: Error in valid config checking
 
 2017-02-24
 ~~~~~~~~~~

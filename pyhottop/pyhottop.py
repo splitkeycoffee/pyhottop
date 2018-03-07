@@ -686,7 +686,7 @@ class Hottop:
             interval checking, this is not liable to skew data that much and
             it's better than extreme false data.
             """
-            config = self.get_roast_properties()['last']
+            config = self.get_roast_properties()['last']['config']
             if not config['valid']:
                 self._log.debug("Invalid config at event time, retrying...")
                 self.get_valid_config()

@@ -846,7 +846,7 @@
 <span class="sd">            interval checking, this is not liable to skew data that much and</span>
 <span class="sd">            it&#39;s better than extreme false data.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
-            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()[</span><span class="s1">&#39;last&#39;</span><span class="p">]</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_roast_properties</span><span class="p">()[</span><span class="s1">&#39;last&#39;</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;valid&#39;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Invalid config at event time, retrying...&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">get_valid_config</span><span class="p">()</span>
