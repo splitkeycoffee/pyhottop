@@ -522,6 +522,7 @@ class Hottop:
             output['time'] = ((td.total_seconds() + 60) / 60) - 1
             self._roast['duration'] = output['time']
             local.update({'time': output['time']})
+            output['datetime'] = now_time(str=True)
             ct = load_time(now_time(str=True))
             st = load_time(self._roast['start_time'])
             self._roast['duration'] = timedelta2period(ct - st)
