@@ -54,6 +54,10 @@ This library provides full control of the Hottop roaster. Built-in callback func
 
 Changelog
 ---------
+2017-03-15
+~~~~~~~~~~
+* Bugfix: Capture error when validating byte sequence
+
 2017-03-07
 ~~~~~~~~~~
 * Change: Removed non-python3 dict method

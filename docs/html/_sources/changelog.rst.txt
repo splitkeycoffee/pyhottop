@@ -2,6 +2,10 @@ Changelog
 =========
 Running list of changes to the library.
 
+2017-03-15
+~~~~~~~~~~
+* Bugfix: Capture error when validating byte sequence
+
 2017-03-07
 ~~~~~~~~~~
 * Change: Removed non-python3 dict method

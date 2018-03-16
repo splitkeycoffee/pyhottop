@@ -400,7 +400,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_read_settings</span><span class="p">(</span><span class="n">retry</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_checksum</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="kc">False</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span> <span class="ow">and</span> <span class="p">(</span><span class="n">retry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retry_count</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Retry count reached on buffer check&#39;</span><span class="p">)</span>

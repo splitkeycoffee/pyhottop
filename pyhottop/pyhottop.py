@@ -240,7 +240,11 @@ class ControlProcess(Thread):
                 self._conn.close()
                 self._read_settings(retry=True)
 
-        check = self._validate_checksum(buffer)
+        try:
+            check = self._validate_checksum(buffer)
+        except:
+            check = False
+
         if not check and (retry and self._retry_count <= 3):
             if self._retry_count == 3:
                 self._log.error('Retry count reached on buffer check')
